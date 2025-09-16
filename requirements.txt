@@ -1,0 +1,7 @@
+pdfplumber
+numpy
+streamlit
+plotly
+pandas
+ipykernel
+jupyter
