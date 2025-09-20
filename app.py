@@ -90,3 +90,14 @@ if submit:
     # fig.update_yaxes(autorange="reversed")
 
     st.plotly_chart(fig)
+
+st.markdown(
+    """
+    <hr>
+    <p style='text-align: center; color: gray; font-size: 12px;'>
+        Desenvolvido por Pedro Maltez | Dados de Fábio Fernandes
+    </p>
+    """,
+    unsafe_allow_html=True
+)
+
