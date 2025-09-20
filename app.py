@@ -80,7 +80,7 @@ if submit:
         xaxis_title="Ano",
         yaxis_title="Número de Ordem",
         xaxis=dict(tickangle=0),  # labels na horizontal
-        yaxis=dict(autorange="reversed"),  # 1º lugar em cima
+        #yaxis=dict(autorange="reversed"),  # 1º lugar em cima
         margin=dict(l=50, r=50, t=70, b=120),  # espaço para legenda em baixo
         legend=dict(
             orientation="h",
