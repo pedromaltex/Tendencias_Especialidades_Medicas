@@ -1,43 +1,36 @@
 import streamlit as st
-import numpy as np
-import plotly.graph_objects as go
 import pandas as pd
+import plotly.graph_objects as go
 from config import CSV_PATH
 
 # Carregar CSV
 dados = pd.read_csv(CSV_PATH)
 
-# --- Interface Streamlit ---
 st.title("Colocações Especialidades")
 
-with st.sidebar.form("params_form"):
-    st.header("Parâmetros")
-
-    # Especialidades
+# Expander para escolher especialidade
+with st.sidebar.expander("Escolher Especialidade", expanded=False):
     especialidades = sorted(dados["Especialidade"].dropna().unique())
     especialidades.insert(0, "TODAS")
     especialidade = st.selectbox("Especialidade:", especialidades)
 
-
-
-    # 🔑 Filtrar apenas locais onde a especialidade existe
+# Expander para escolher local
+with st.sidebar.expander("Escolher Local", expanded=False):
     if especialidade == "TODAS":
         instituicoes = sorted(dados["Local"].dropna().unique())
     else:
         instituicoes = sorted(
             dados.loc[dados["Especialidade"] == especialidade, "Local"].dropna().unique()
         )
-    submit_filtro_locais= st.form_submit_button("Filtrar Locais com esta Especialidade")
-
-
     instituicoes.insert(0, "TODAS")
     instituicao = st.selectbox("Local:", instituicoes)
 
-    # Posição do utilizador
+# Expander para posição
+with st.sidebar.expander("Definir Posição", expanded=True):
     nota_utilizador = st.slider("A minha posição:", 1, 3000, value=1000)
 
-    submit = st.form_submit_button("Mostrar Gráfico")
-
+# Botão fora do form
+submit = st.sidebar.button("Mostrar Gráfico")
 
 if submit:
     # Filtrar dados conforme parâmetros
@@ -81,7 +74,5 @@ if submit:
         yaxis_title="Número de Ordem",
         legend_title="Legenda"
     )
-
-    #fig.update_yaxes(autorange="reversed")
 
     st.plotly_chart(fig)
