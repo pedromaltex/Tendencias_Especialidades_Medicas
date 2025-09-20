@@ -1,68 +1,71 @@
 import streamlit as st
-import numpy as np
-import plotly.graph_objects as go
 import pandas as pd
+import plotly.graph_objects as go
 from config import CSV_PATH
 
-# Carregar CSV
+# --- Carregar CSV ---
 dados = pd.read_csv(CSV_PATH)
 
-# --- Interface Streamlit ---
+# --- Título ---
 st.title("Colocações Especialidades")
 
-with st.sidebar.form("params_form"):
-    st.header("Parâmetros")
-
-    # Especialidades
+# --- Sidebar ---
+# Escolher especialidades
+with st.sidebar.expander("Escolher Especialidades", expanded=True):
     especialidades = sorted(dados["Especialidade"].dropna().unique())
     especialidades.insert(0, "TODAS")
-    especialidade = st.selectbox("Especialidade:", especialidades)
+    especialidades_escolhidas = st.multiselect(
+        "Especialidades:", 
+        especialidades, 
+        default=["TODAS"]
+    )
 
-
-
-    # 🔑 Filtrar apenas locais onde a especialidade existe
-    if especialidade == "TODAS":
+# Escolher local
+with st.sidebar.expander("Escolher Local", expanded=False):
+    if "TODAS" in especialidades_escolhidas:
         instituicoes = sorted(dados["Local"].dropna().unique())
     else:
         instituicoes = sorted(
-            dados.loc[dados["Especialidade"] == especialidade, "Local"].dropna().unique()
+            dados[dados["Especialidade"].isin(especialidades_escolhidas)]["Local"].dropna().unique()
         )
-    submit_filtro_locais= st.form_submit_button("Filtrar Locais com esta Especialidade")
-
-
     instituicoes.insert(0, "TODAS")
     instituicao = st.selectbox("Local:", instituicoes)
 
-    # Posição do utilizador
+# Posição do utilizador
+with st.sidebar.expander("Definir Posição", expanded=False):
     nota_utilizador = st.slider("A minha posição:", 1, 3000, value=1000)
 
-    submit = st.form_submit_button("Mostrar Gráfico")
+# Botão para gerar gráfico
+submit = st.sidebar.button("Mostrar Gráfico")
 
-
+# --- Gráfico ---
 if submit:
-    # Filtrar dados conforme parâmetros
-    dados_filtrados = dados.copy()
-    if especialidade != "TODAS":
-        dados_filtrados = dados_filtrados[dados_filtrados["Especialidade"] == especialidade]
-    if instituicao != "TODAS":
-        dados_filtrados = dados_filtrados[dados_filtrados["Local"] == instituicao]
-
-    # Pegar o último colocado por ano
-    dados_grouped = dados_filtrados.groupby("Ano", as_index=False)["Numero_Ordem"].max()
-    anos = dados_grouped["Ano"].values
-    y = dados_grouped["Numero_Ordem"].values
-
-    # --- Gráfico ---
     fig = go.Figure()
 
-    fig.add_trace(go.Scatter(
-        x=anos,
-        y=y,
-        mode='lines+markers',
-        name=f"Último colocado ({especialidade})",
-        opacity=0.8
-    ))
+    # Para cada especialidade selecionada
+    for esp in especialidades_escolhidas:
+        dados_filtrados = dados.copy()
 
+        if esp != "TODAS":
+            dados_filtrados = dados_filtrados[dados_filtrados["Especialidade"] == esp]
+        if instituicao != "TODAS":
+            dados_filtrados = dados_filtrados[dados_filtrados["Local"] == instituicao]
+
+        if dados_filtrados.empty:
+            continue  # ignora se não houver dados
+
+        # Último colocado por ano
+        dados_grouped = dados_filtrados.groupby("Ano", as_index=False)["Numero_Ordem"].max()
+
+        fig.add_trace(go.Scatter(
+            x=dados_grouped["Ano"],
+            y=dados_grouped["Numero_Ordem"],
+            mode='lines+markers',
+            name=f"Último colocado ({esp})",
+            opacity=0.8
+        ))
+
+    # Linha horizontal da posição do utilizador
     fig.add_hline(
         y=nota_utilizador,
         line_dash="dot",
@@ -71,7 +74,8 @@ if submit:
         annotation_position="bottom right"
     )
 
-    titulo = f"Último colocado - {especialidade}"
+    # Layout
+    titulo = "Evolução últimos colocados"
     if instituicao != "TODAS":
         titulo += f" ({instituicao})"
 
@@ -82,6 +86,7 @@ if submit:
         legend_title="Legenda"
     )
 
-    #fig.update_yaxes(autorange="reversed")
+    # Se quiseres o 1º lugar no topo, ativa esta linha:
+    # fig.update_yaxes(autorange="reversed")
 
     st.plotly_chart(fig)
