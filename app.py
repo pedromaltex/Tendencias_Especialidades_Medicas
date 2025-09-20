@@ -10,30 +10,27 @@ dados = pd.read_csv(CSV_PATH)
 st.title("Colocações Especialidades Médicas🩺")
 
 # --- Sidebar ---
-# Escolher especialidades
-with st.sidebar.expander("Escolher Especialidades", expanded=True):
-    especialidades = sorted(dados["Especialidade"].dropna().unique())
-    especialidades.insert(0, "TODAS")
-    especialidades_escolhidas = st.multiselect(
-        "Especialidades:", 
-        especialidades, 
-        default=["Medicina Geral Familiar"]
+# Seleção de especialidades
+especialidades = sorted(dados["Especialidade"].dropna().unique())
+especialidades.insert(0, "TODAS")
+especialidades_escolhidas = st.sidebar.multiselect(
+    "Especialidades:", 
+    especialidades, 
+    default=["Medicina Geral Familiar"]
+)
+
+# Seleção de local
+if "TODAS" in especialidades_escolhidas:
+    instituicoes = sorted(dados["Local"].dropna().unique())
+else:
+    instituicoes = sorted(
+        dados[dados["Especialidade"].isin(especialidades_escolhidas)]["Local"].dropna().unique()
     )
+instituicoes.insert(0, "TODAS")
+instituicao = st.sidebar.selectbox("Local:", instituicoes)
 
-# Escolher local
-with st.sidebar.expander("Escolher Local", expanded=False):
-    if "TODAS" in especialidades_escolhidas:
-        instituicoes = sorted(dados["Local"].dropna().unique())
-    else:
-        instituicoes = sorted(
-            dados[dados["Especialidade"].isin(especialidades_escolhidas)]["Local"].dropna().unique()
-        )
-    instituicoes.insert(0, "TODAS")
-    instituicao = st.selectbox("Local:", instituicoes)
-
-# Posição do utilizador
-with st.sidebar.expander("Definir Posição", expanded=False):
-    nota_utilizador = st.slider("A minha posição:", 1, 3000, value=1000)
+# Slider da posição do utilizador
+nota_utilizador = st.sidebar.slider("A minha posição:", 1, 3000, value=1000)
 
 # Botão para gerar gráfico
 submit = st.sidebar.button("Mostrar Gráfico")
@@ -45,14 +42,13 @@ if submit:
     # Para cada especialidade selecionada
     for esp in especialidades_escolhidas:
         dados_filtrados = dados.copy()
-
         if esp != "TODAS":
             dados_filtrados = dados_filtrados[dados_filtrados["Especialidade"] == esp]
         if instituicao != "TODAS":
             dados_filtrados = dados_filtrados[dados_filtrados["Local"] == instituicao]
 
         if dados_filtrados.empty:
-            continue  # ignora se não houver dados
+            continue
 
         # Último colocado por ano
         dados_grouped = dados_filtrados.groupby("Ano", as_index=False)["Numero_Ordem"].max()
@@ -61,7 +57,7 @@ if submit:
             x=dados_grouped["Ano"],
             y=dados_grouped["Numero_Ordem"],
             mode='lines+markers',
-            name=f"Último colocado ({esp})",
+            name=f"{esp}",
             opacity=0.8
         ))
 
@@ -83,14 +79,22 @@ if submit:
         title=titulo,
         xaxis_title="Ano",
         yaxis_title="Número de Ordem",
-        legend_title="Legenda"
+        xaxis=dict(tickangle=0),  # labels na horizontal
+        yaxis=dict(autorange="reversed"),  # 1º lugar em cima
+        margin=dict(l=50, r=50, t=70, b=120),  # espaço para legenda em baixo
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.4,  # ajusta para ficar abaixo do gráfico
+            xanchor="center",
+            x=0.5
+        )
     )
 
-    # Se quiseres o 1º lugar no topo, ativa esta linha:
-    # fig.update_yaxes(autorange="reversed")
+    # Mostrar gráfico full width
+    st.plotly_chart(fig, use_container_width=True)
 
-    st.plotly_chart(fig)
-
+# --- Créditos ---
 st.markdown(
     """
     <hr>
@@ -100,4 +104,3 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
