@@ -9,9 +9,7 @@ def ultimos_colocados(df, esp="TODAS", local="TODAS"):
     if local != "TODAS":
         df_filtered = df_filtered[df_filtered["TODAS"] == local]
     
-    # Extrair dados
-    anos = df_filtered["Ano"].values
-    y = df_filtered["Numero_Ordem"].values   # coluna com posição do último colocado
+    
 
     ul_coloc = {}
 
