@@ -6,6 +6,6 @@ import pandas as pd
 DIR_PATH = os.path.dirname(__file__)
 
 # Caminho para a pasta "csv" que está ao lado de app.py
-csv = os.path.join(DIR_PATH, "csv")
-CSV_PATH = os.path.join(csv, "ALL.csv")
+CSV_FOLDER = os.path.join(DIR_PATH, "csv")
+CSV_PATH = os.path.join(CSV_FOLDER, "ALL.csv")
 

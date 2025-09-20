@@ -1,16 +1,11 @@
-# %%
-
-# ---
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 import pandas as pd
-from helpers import ultimos_colocados
 from config import CSV_PATH
 
 # Carregar CSV
 dados = pd.read_csv(CSV_PATH)
-dados["Numero_Ordem"] = dados["#"]
 
 # --- Interface Streamlit ---
 st.title("Colocações Especialidades")
@@ -23,26 +18,43 @@ with st.sidebar.form("params_form"):
     especialidades.insert(0, "TODAS")
     especialidade = st.selectbox("Especialidade:", especialidades)
 
-    # Posição do utilizador
-    nota_utilizador = st.number_input("A minha posição:", 0, value=100)
 
-    # Instituições
-    instituicoes = ["TODAS"] + sorted(dados["Local"].dropna().unique())
+
+    # 🔑 Filtrar apenas locais onde a especialidade existe
+    if especialidade == "TODAS":
+        instituicoes = sorted(dados["Local"].dropna().unique())
+    else:
+        instituicoes = sorted(
+            dados.loc[dados["Especialidade"] == especialidade, "Local"].dropna().unique()
+        )
+    submit_filtro_locais= st.form_submit_button("Filtrar Locais com esta Especialidade")
+
+
+    instituicoes.insert(0, "TODAS")
     instituicao = st.selectbox("Local:", instituicoes)
+
+    # Posição do utilizador
+    nota_utilizador = st.slider("A minha posição:", 1, 3000, value=1000)
 
     submit = st.form_submit_button("Mostrar Gráfico")
 
 if submit:
-    y = ultimos_colocados(dados, especialidade, instituicao).values()
+    # Filtrar dados conforme parâmetros
+    dados_filtrados = dados.copy()
+    if especialidade != "TODAS":
+        dados_filtrados = dados_filtrados[dados_filtrados["Especialidade"] == especialidade]
+    if instituicao != "TODAS":
+        dados_filtrados = dados_filtrados[dados_filtrados["Local"] == instituicao]
 
-    # Extrair dados
-    anos = dados["Ano"].values
-    y = dados["Numero_Ordem"].values   # coluna com posição do último colocado
-    
+    # Pegar o último colocado por ano
+    dados_grouped = dados_filtrados.groupby("Ano", as_index=False)["Numero_Ordem"].max()
+    anos = dados_grouped["Ano"].values
+    y = dados_grouped["Numero_Ordem"].values
+
     # --- Gráfico ---
     fig = go.Figure()
 
-    # Linha de evolução
+    # Linha evolução dos últimos colocados
     fig.add_trace(go.Scatter(
         x=anos,
         y=y,
@@ -55,10 +67,21 @@ if submit:
     fig.add_hline(
         y=nota_utilizador,
         line_dash="dot",
-        line_color="red",
+        line_color="black",
         annotation_text="Minha posição",
         annotation_position="bottom right"
     )
+
+    # Pontos do utilizador em cada ano (vermelho ou verde)
+    cores = ["green" if nota_utilizador <= limite else "red" for limite in y]
+
+    fig.add_trace(go.Scatter(
+        x=anos,
+        y=[nota_utilizador] * len(anos),
+        mode='markers',
+        marker=dict(color=cores, size=10, symbol="circle"),
+        name="Minha posição"
+    ))
 
     # Título dinâmico
     titulo = f"Último colocado - {especialidade}"
@@ -73,8 +96,7 @@ if submit:
         legend_title="Legenda"
     )
 
-    # Inverter eixo Y (1º lugar é melhor que 1000º, etc.)
+    # Inverter eixo Y (1º lugar em cima)
     fig.update_yaxes(autorange="reversed")
 
-    # Mostrar gráfico
     st.plotly_chart(fig)
