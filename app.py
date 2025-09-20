@@ -17,7 +17,7 @@ with st.sidebar.expander("Escolher Especialidades", expanded=True):
     especialidades_escolhidas = st.multiselect(
         "Especialidades:", 
         especialidades, 
-        default=["TODAS"]
+        default=["Medicina Geral Familiar"]
     )
 
 # Escolher local
