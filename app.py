@@ -7,7 +7,7 @@ from config import CSV_PATH
 dados = pd.read_csv(CSV_PATH)
 
 # --- Título ---
-st.title("Colocações Especialidades")
+st.title("Colocações Especialidades Médicas🩺")
 
 # --- Sidebar ---
 # Escolher especialidades
