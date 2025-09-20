@@ -1,24 +1,26 @@
+# %%
 # ---
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 import pandas as pd
 
-ultimos_colocados = pd.read_csv("ultimos_colocados.csv")
+ultimos_colocados = pd.read_csv("csv\ALL.csv")
 
 # --- Interface Streamlit ---
 st.title("Colocações Especialidades")
 
 with st.sidebar.form("params_form"):
     st.header("Parâmetros")
+    especialidades = sorted(ultimos_colocados["Especialidade"].dropna().unique())
+    especialidades.insert(0, "TODAS")
 
-    especialidade = st.selectbox("Especialidade:",
-                                 sorted(ultimos_colocados["Especialidade"].unique()))
+    especialidade = st.selectbox("Especialidade:", especialidades)
 
     nota_utilizador = st.number_input("A minha posição:", 0, value=100)
 
-    instituicoes = ["Todas"] + sorted(ultimos_colocados["Instituição"].unique())
-    freq_contribuitions = st.selectbox("Instituição:", instituicoes)
+    instituicoes = ["Todas"] + sorted(ultimos_colocados["Local"].dropna().unique())
+    freq_contribuitions = st.selectbox("Local:", instituicoes)
 
     submit = st.form_submit_button("Mostrar Gráfico")
 
@@ -27,7 +29,7 @@ if submit:
     df_filtered = ultimos_colocados[ultimos_colocados["Especialidade"] == especialidade]
 
     if freq_contribuitions != "Todas":
-        df_filtered = df_filtered[df_filtered["Instituição"] == freq_contribuitions]
+        df_filtered = df_filtered[df_filtered["Local"] == freq_contribuitions]
 
     anos = df_filtered["Ano"].values
     y = df_filtered["Numero_Ordem"].values   # <-- aqui usas a coluna real da nota
