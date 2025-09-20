@@ -1,17 +1,23 @@
 
 def ultimos_colocados(df, esp="TODAS", local="TODAS"):
+    # Filtrar dados
+    if esp != "TODAS":
+        df_filtered = df[df["Especialidade"] == esp]
+    else:
+        df_filtered = df.copy()
+
+    if local != "TODAS":
+        df_filtered = df_filtered[df_filtered["TODAS"] == local]
+    
+    # Extrair dados
+    anos = df_filtered["Ano"].values
+    y = df_filtered["Numero_Ordem"].values   # coluna com posição do último colocado
+
     ul_coloc = {}
 
     # Criar uma cópia para não mexer no original
-    df_copy = df.copy()
+    df_copy = df_filtered.copy()
 
-    '''# Filtro local
-    if local != "TODAS":
-        df_copy = df_copy[df_copy["Local"] == local]'''
-
-    # Filtro especialidade
-    if esp != "TODAS":
-        df_copy = df_copy[df_copy["Especialidade"] == esp]
 
     # Iterar por ano e calcular último colocado
     for ano in sorted(df_copy["Ano"].unique()):

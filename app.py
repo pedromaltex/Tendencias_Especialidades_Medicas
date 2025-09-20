@@ -33,19 +33,12 @@ with st.sidebar.form("params_form"):
     submit = st.form_submit_button("Mostrar Gráfico")
 
 if submit:
-    # Filtrar dados
-    if especialidade != "TODAS":
-        df_filtered = dados[dados["Especialidade"] == especialidade]
-    else:
-        df_filtered = dados.copy()
-
-    if instituicao != "TODAS":
-        df_filtered = df_filtered[df_filtered["TODAS"] == instituicao]
+    y = ultimos_colocados(dados, especialidade, instituicao).values()
 
     # Extrair dados
-    anos = df_filtered["Ano"].values
-    y = df_filtered["Numero_Ordem"].values   # coluna com posição do último colocado
-    y = ultimos_colocados(df_filtered, especialidade, instituicao).values()
+    anos = dados["Ano"].values
+    y = dados["Numero_Ordem"].values   # coluna com posição do último colocado
+    
     # --- Gráfico ---
     fig = go.Figure()
 
